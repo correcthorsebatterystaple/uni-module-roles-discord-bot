@@ -63,16 +63,18 @@ client.on('message', async (msg) => {
                         const category = role.name.slice(0, 5).endsWith('2')
                             ? sem2Category
                             : sem1Category;
+                        const [num, name] = modules.find(m => m[0] === role.name.slice(0,5))
                         return msg.guild.channels.create(role.name, {
                             type: 'text',
                             parent: category,
+                            topic: `${num} - ${name}`,
                             permissionOverwrites: [
                                 { id: role, allow: 'VIEW_CHANNEL' },
                                 { id: everyoneRole, deny: 'VIEW_CHANNEL' },
                             ],
                         });
                     })
-                    .then((channel) => {})
+                    .then((channel) => console.log(`${channel.name} channel has been created`))
         );
         console.log('Added all roles');
 
