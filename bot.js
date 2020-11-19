@@ -75,32 +75,41 @@ client.on('message', async (msg) => {
                             ],
                         });
                     })
-                    .then((channel) =>
-                        console.log(`${channel.name} channel has been created`)
-                    )
+                    .then((channel) => {
+                        console.log(`${channel.name} channel has been created`);
+                        return channel;
+                    })
         );
         console.log('Added all roles');
 
         hasBeenInitialized = true;
-        msg.delete({ timeout: 1000 });
+        await msg.delete({ timeout: 1000 });
         return;
     }
 });
 
-client.on('message', (msg) => {
+client.on('message', async (msg) => {
     if (msg.channel.name === 'subscribe-units') {
         const moduleMatches = moduleRoleNames.filter((name) =>
             name.startsWith(msg.content)
         );
         if (moduleMatches.length === 1) {
-            msg.react('✅');
-
+            
             const [roleName] = moduleMatches;
             const role = msg.guild.roles.cache.find((r) => r.name === roleName);
-            msg.member.roles.add(role);
+            
+            if (msg.member.roles.cache.has(role.id)) {
+                await msg.member.roles.remove(role);
+                await msg.react('❌');
+            } else {
+                await msg.member.roles.add(role);
+                await msg.react('✅');
+            }
 
-            msg.delete({ timeout: 1000 });
+        } else {
+            await msg.react('⚠️');
         }
+        await msg.delete({ timeout: 1000 });
     }
 });
 
