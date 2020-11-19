@@ -1,14 +1,13 @@
-const { timeStamp } = require('console');
+if (process.env.NODE_ENV !== 'PROD') {
+    require('dotenv').config();
+}
+
 const Discord = require('discord.js');
-const config = require('./config.json');
+const config = { TOKEN: process.env.TOKEN };
 const modules = require('./modules.json');
 
 const client = new Discord.Client();
-const guild = new Discord.Guild(client);
 let hasBeenInitialized = false;
-
-const sem1Modules = modules.filter((module) => module[0].endsWith('1'));
-const sem2Modules = modules.filter((module) => module[0].endsWith('2'));
 
 const moduleRoleNames = modules.map((module) => {
     const [num, name] = module;
@@ -63,7 +62,9 @@ client.on('message', async (msg) => {
                         const category = role.name.slice(0, 5).endsWith('2')
                             ? sem2Category
                             : sem1Category;
-                        const [num, name] = modules.find(m => m[0] === role.name.slice(0,5))
+                        const [num, name] = modules.find(
+                            (m) => m[0] === role.name.slice(0, 5)
+                        );
                         return msg.guild.channels.create(role.name, {
                             type: 'text',
                             parent: category,
@@ -74,7 +75,9 @@ client.on('message', async (msg) => {
                             ],
                         });
                     })
-                    .then((channel) => console.log(`${channel.name} channel has been created`))
+                    .then((channel) =>
+                        console.log(`${channel.name} channel has been created`)
+                    )
         );
         console.log('Added all roles');
 
@@ -85,17 +88,19 @@ client.on('message', async (msg) => {
 });
 
 client.on('message', (msg) => {
-    const moduleMatches = moduleRoleNames.filter((name) =>
-        name.startsWith(msg.content)
-    );
-    if (moduleMatches.length === 1) {
-        msg.react('✅');
+    if (msg.channel.name === 'subscribe-units') {
+        const moduleMatches = moduleRoleNames.filter((name) =>
+            name.startsWith(msg.content)
+        );
+        if (moduleMatches.length === 1) {
+            msg.react('✅');
 
-        const [roleName] = moduleMatches;
-        const role = msg.guild.roles.cache.find((r) => r.name === roleName);
-        msg.member.roles.add(role);
+            const [roleName] = moduleMatches;
+            const role = msg.guild.roles.cache.find((r) => r.name === roleName);
+            msg.member.roles.add(role);
 
-        msg.delete({ timeout: 1000 });
+            msg.delete({ timeout: 1000 });
+        }
     }
 });
 
