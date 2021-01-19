@@ -144,6 +144,9 @@ client.on('message', async (msg) => {
         msg.content === 'resend'
     ) {
         await msg.channel.send(
+            'Please type in the module code from the chat bellow to be enrolled to channel for that module'
+        );
+        await msg.channel.send(
             `\`\`\`${modules.map((x) => x.join(' - ')).join('\n')}\`\`\``
         );
         
