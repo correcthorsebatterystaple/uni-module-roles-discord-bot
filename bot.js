@@ -89,7 +89,7 @@ client.on('message', async (msg) => {
 });
 
 client.on('message', async (msg) => {
-    if (msg.channel.name === 'subscribe-units') {
+    if (msg.channel.name === 'subscribe-units' && !msg.author.bot) {
         const moduleMatches = moduleRoleNames.filter((name) =>
             name.startsWith(msg.content)
         );
