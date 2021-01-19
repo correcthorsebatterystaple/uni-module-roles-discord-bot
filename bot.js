@@ -137,4 +137,18 @@ client.on('message', async (msg) => {
     }
 });
 
+client.on('message', async (msg) => {
+    if (
+        msg.member.hasPermission('ADMINISTRATOR') &&
+        msg.channel.name === 'subscribe-units' &&
+        msg.content === 'resend'
+    ) {
+        await msg.channel.send(
+            `\`\`\`${modules.map((x) => x.join(' - ')).join('\n')}\`\`\``
+        );
+        
+        await msg.delete({ timeout: 1000 });
+    }
+});
+
 client.login(config.TOKEN);
