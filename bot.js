@@ -30,11 +30,23 @@ client.on('ready', async () => {
         .then((invites) =>
             invites.each((invite) => (invitesCount[invite.code] = invite.uses))
         );
-    console.log(invitesCount);
+    console.log('Invites count:', invitesCount);
 });
 
+client.on('inviteCreate', invite => {
+    console.log(`New invite created with code ${invite.code}`);
+    invitesCount[invite.code] = invite.uses;
+    console.log('Invites count updated.\nInvites count:', invitesCount);
+});
+
+client.on('inviteDelete', invite => {
+    console.log(`Invite deleted with code ${invite.code}`);
+    delete invitesCount[invite.code];
+    console.log('Invites count updated.\nInvites count:', invitesCount);
+})
+
 client.on('guildMemberAdd', async (member) => {
-    console.log(`triggered member add of memeber ${member.user.tag}`);
+    console.log(`Triggered member add of member ${member.user.tag}`);
     const invites = await member.guild.fetchInvites();
     const newInvitesCount = invites.reduce(
         (acc, curr) => (acc[curr.code] = curr.uses),
@@ -61,7 +73,30 @@ client.on('guildMemberAdd', async (member) => {
         }
     }
     invitesCount = newInvitesCount;
+    console.log('Invites count updated, invites count:', invitesCount);
 });
+
+client.on('message', async msg => {
+    if (msg.channel.name === 'bot-testing') {
+        if (msg.content === '!refresh-invites-count') {
+            console.log('Refreshing invites count');
+            const invites = await msg.guild.fetchInvites();
+            invitesCount = invites.reduce(
+                (acc, curr) => (acc[curr.code] = curr.uses),
+                {}
+            );
+            console.log('Invites count updated.\nInvites count:', invitesCount);
+            msg.react('✅');
+            msg.channel.send("```"+JSON.stringify(invitesCount, undefined, 2)+"```");
+            return;
+        }
+
+        if (msg.content === '!get-invites-count') {
+            msg.channel.send("```"+JSON.stringify(invitesCount, undefined, 2)+"```");
+        }
+
+    }
+})
 
 client.on('message', async (msg) => {
     if (
