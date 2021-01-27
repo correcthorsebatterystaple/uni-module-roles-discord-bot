@@ -9,6 +9,9 @@ const modules = require('./modules.json');
 const client = new Discord.Client();
 let hasBeenInitialized = false;
 
+let invitesCount = {};
+const channelNameToRoleNameMap = new Map([['37111-acg', '37111-acg']]);
+
 const moduleRoleNames = modules.map((module) => {
     const [num, name] = module;
     const abbrevName = name
@@ -19,8 +22,45 @@ const moduleRoleNames = modules.map((module) => {
     return `${num}-${abbrevName}`;
 });
 
-client.on('ready', () => {
+client.on('ready', async () => {
     console.log(`Logged in as ${client.user.tag}!`);
+    const guild = client.guilds.cache.first();
+    await guild
+        .fetchInvites()
+        .then((invites) =>
+            invites.each((invite) => (invitesCount[invite.code] = invite.uses))
+        );
+    console.log(invitesCount);
+});
+
+client.on('guildMemberAdd', async (member) => {
+    console.log(`triggered member add of memeber ${member.user.tag}`);
+    const invites = await member.guild.fetchInvites();
+    const newInvitesCount = invites.reduce(
+        (acc, curr) => (acc[curr.code] = curr.uses),
+        {}
+    );
+    for (code in invitesCount) {
+        if (
+            invitesCount[code] !== newInvitesCount[code] &&
+            channelNameToRoleNameMap.has(invites.get(code).channel.name)
+        ) {
+            const roleName = channelNameToRoleNameMap.get(
+                invites.get(code).channel.name
+            );
+            await member.roles
+                .add(
+                    member.guild.roles.cache.find(
+                        (role) => role.name === roleName
+                    )
+                )
+                .then((_member) =>
+                    console.log(`Role ${roleName} added to ${_member.user.tag}`)
+                );
+                break;
+        }
+    }
+    invitesCount = newInvitesCount;
 });
 
 client.on('message', async (msg) => {
@@ -94,10 +134,9 @@ client.on('message', async (msg) => {
             name.startsWith(msg.content)
         );
         if (moduleMatches.length === 1) {
-            
             const [roleName] = moduleMatches;
             const role = msg.guild.roles.cache.find((r) => r.name === roleName);
-            
+
             if (msg.member.roles.cache.has(role.id)) {
                 await msg.member.roles.remove(role);
                 await msg.react('❌');
@@ -105,7 +144,6 @@ client.on('message', async (msg) => {
                 await msg.member.roles.add(role);
                 await msg.react('✅');
             }
-
         } else {
             await msg.react('⚠️');
         }
@@ -149,7 +187,7 @@ client.on('message', async (msg) => {
         await msg.channel.send(
             `\`\`\`${modules.map((x) => x.join(' - ')).join('\n')}\`\`\``
         );
-        
+
         await msg.delete({ timeout: 1000 });
     }
 });
