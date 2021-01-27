@@ -46,34 +46,34 @@ client.on('inviteDelete', invite => {
 })
 
 client.on('guildMemberAdd', async (member) => {
-    console.log(`Triggered member add of member ${member.user.tag}`);
-    const invites = await member.guild.fetchInvites();
-    const newInvitesCount = invites.reduce(
-        (acc, curr) => (acc[curr.code] = curr.uses),
-        {}
-    );
-    for (code in invitesCount) {
-        if (
-            invitesCount[code] !== newInvitesCount[code] &&
-            channelNameToRoleNameMap.has(invites.get(code).channel.name)
-        ) {
-            const roleName = channelNameToRoleNameMap.get(
-                invites.get(code).channel.name
-            );
-            await member.roles
-                .add(
-                    member.guild.roles.cache.find(
-                        (role) => role.name === roleName
-                    )
-                )
-                .then((_member) =>
-                    console.log(`Role ${roleName} added to ${_member.user.tag}`)
-                );
-                break;
-        }
-    }
-    invitesCount = newInvitesCount;
-    console.log('Invites count updated, invites count:', invitesCount);
+    // console.log(`Triggered member add of member ${member.user.tag}`);
+    // const invites = await member.guild.fetchInvites();
+    // const newInvitesCount = invites.reduce(
+    //     (acc, curr) => (acc[curr.code] = curr.uses),
+    //     {}
+    // );
+    // for (code in invitesCount) {
+    //     if (
+    //         invitesCount[code] !== newInvitesCount[code] &&
+    //         channelNameToRoleNameMap.has(invites.get(code).channel.name)
+    //     ) {
+    //         const roleName = channelNameToRoleNameMap.get(
+    //             invites.get(code).channel.name
+    //         );
+    //         await member.roles
+    //             .add(
+    //                 member.guild.roles.cache.find(
+    //                     (role) => role.name === roleName
+    //                 )
+    //             )
+    //             .then((_member) =>
+    //                 console.log(`Role ${roleName} added to ${_member.user.tag}`)
+    //             );
+    //             break;
+    //     }
+    // }
+    // invitesCount = newInvitesCount;
+    // console.log('Invites count updated, invites count:', invitesCount);
 });
 
 client.on('message', async msg => {
