@@ -33,70 +33,74 @@ client.on('ready', async () => {
     console.log('Invites count:', invitesCount);
 });
 
-client.on('inviteCreate', invite => {
+client.on('inviteCreate', (invite) => {
     console.log(`New invite created with code ${invite.code}`);
     invitesCount[invite.code] = invite.uses;
     console.log('Invites count updated.\nInvites count:', invitesCount);
 });
 
-client.on('inviteDelete', invite => {
+client.on('inviteDelete', (invite) => {
     console.log(`Invite deleted with code ${invite.code}`);
     delete invitesCount[invite.code];
     console.log('Invites count updated.\nInvites count:', invitesCount);
-})
-
-client.on('guildMemberAdd', async (member) => {
-    // console.log(`Triggered member add of member ${member.user.tag}`);
-    // const invites = await member.guild.fetchInvites();
-    // const newInvitesCount = invites.reduce(
-    //     (acc, curr) => (acc[curr.code] = curr.uses),
-    //     {}
-    // );
-    // for (code in invitesCount) {
-    //     if (
-    //         invitesCount[code] !== newInvitesCount[code] &&
-    //         channelNameToRoleNameMap.has(invites.get(code).channel.name)
-    //     ) {
-    //         const roleName = channelNameToRoleNameMap.get(
-    //             invites.get(code).channel.name
-    //         );
-    //         await member.roles
-    //             .add(
-    //                 member.guild.roles.cache.find(
-    //                     (role) => role.name === roleName
-    //                 )
-    //             )
-    //             .then((_member) =>
-    //                 console.log(`Role ${roleName} added to ${_member.user.tag}`)
-    //             );
-    //             break;
-    //     }
-    // }
-    // invitesCount = newInvitesCount;
-    // console.log('Invites count updated, invites count:', invitesCount);
 });
 
-client.on('message', async msg => {
+client.on('guildMemberAdd', async (member) => {
+    console.log(`Triggered member add of member ${member.user.tag}`);
+    const invites = await member.guild.fetchInvites();
+    const newInvitesCount = invites.reduce((acc, curr) => {
+        acc[curr.code] = curr.uses;
+        return acc;
+    }, {});
+    console.log(newInvitesCount);
+    for (code in invitesCount) {
+        if (
+            invitesCount[code] !== newInvitesCount[code] &&
+            channelNameToRoleNameMap.has(invites.get(code).channel.name)
+        ) {
+            const roleName = channelNameToRoleNameMap.get(
+                invites.get(code).channel.name
+            );
+            await member.roles
+                .add(
+                    member.guild.roles.cache.find(
+                        (role) => role.name === roleName
+                    )
+                )
+                .then((_member) =>
+                    console.log(`Role ${roleName} added to ${_member.user.tag}`)
+                );
+            break;
+        }
+    }
+    invitesCount = newInvitesCount;
+    console.log('Invites count updated, invites count:', invitesCount);
+});
+
+client.on('message', async (msg) => {
     if (msg.channel.name === 'bot-testing') {
         if (msg.content === '!refresh-invites-count') {
             console.log('Refreshing invites count');
             const invites = await msg.guild.fetchInvites();
-            invitesCount = invites.reduce(
-                (acc, curr) => (acc[curr.code] = curr.uses),
-                {}
-            );
+            invitesCount = invites.reduce((acc, curr) => {
+                acc[curr.code] = curr.uses;
+                return acc;
+            }, {});
             console.log('Invites count updated.\nInvites count:', invitesCount);
             msg.react('✅');
-            msg.channel.send("```"+JSON.stringify(invitesCount, undefined, 2)+"```");
+            msg.channel.send(
+                '```' + JSON.stringify(invitesCount, undefined, 2) + '```'
+            );
             return;
         }
 
         if (msg.content === '!get-invites-count') {
-            msg.channel.send("```"+JSON.stringify(invitesCount, undefined, 2)+"```");
+            msg.channel.send(
+                '```' + JSON.stringify(invitesCount, undefined, 2) + '```'
+            );
         }
-
     }
-})
+});
 
 client.on('message', async (msg) => {
     if (
